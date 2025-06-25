@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Pila HTML</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for animations and font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stack-item {
+            animation: fade-in 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">
+            Simulador de Pila
+        </h1>
+
+        <!-- Input and Push button section -->
+        <div class="flex items-center space-x-3 mb-6">
+            <input
+                type="text"
+                id="inputValue"
+                placeholder="Ingrese un valor"
+                class="flex-grow p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+            />
+            <button
+                id="pushBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-md shadow-md transform hover:scale-105 transition duration-300 ease-in-out"
+            >
+                Push
+            </button>
+        </div>
+
+        <!-- Pop and Cima buttons section -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <button
+                id="popBtn"
+                class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-md shadow-md transform hover:scale-105 transition duration-300 ease-in-out"
+            >
+                Pop
+            </button>
+            <button
+                id="peekBtn"
+                class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-md shadow-md transform hover:scale-105 transition duration-300 ease-in-out"
+            >
+                Cima
+            </button>
+        </div>
+
+        <!-- Message display area -->
+        <div id="messageDisplay" class="hidden bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded-md mb-6 text-center">
+            {/* Messages will be displayed here by JavaScript */}
+        </div>
+
+        <!-- Visual representation of the stack -->
+        <div id="stackVisual" class="border border-gray-400 rounded-md p-4 bg-gray-50 min-h-[150px] flex flex-col-reverse items-center justify-end overflow-y-auto">
+            <p id="emptyStackMessage" class="text-gray-500 text-lg">La pila está vacía</p>
+            {/* Stack elements will be appended here by JavaScript */}
+        </div>
+    </div>
+
+    <script>
+        // Array to represent the stack
+        let stack = [];
+
+        // Get DOM elements
+        const inputValue = document.getElementById('inputValue');
+        const pushBtn = document.getElementById('pushBtn');
+        const popBtn = document.getElementById('popBtn');
+        const peekBtn = document.getElementById('peekBtn');
+        const messageDisplay = document.getElementById('messageDisplay');
+        const stackVisual = document.getElementById('stackVisual');
+        const emptyStackMessage = document.getElementById('emptyStackMessage');
+
+        // Function to update the visual representation of the stack
+        function updateStackVisual() {
+            // Clear existing stack elements
+            stackVisual.innerHTML = '';
+
+            // Show/hide empty stack message
+            if (stack.length === 0) {
+                emptyStackMessage.classList.remove('hidden');
+                stackVisual.appendChild(emptyStackMessage);
+            } else {
+                emptyStackMessage.classList.add('hidden');
+                // Add stack elements from bottom to top (reversed for visual stacking)
+                // Using appendChild with flex-col-reverse ensures new elements (last in array) appear at the visual top.
+                stack.forEach((item, index) => {
+                    const stackItemDiv = document.createElement('div');
+                    stackItemDiv.className = `w-full bg-indigo-500 text-white text-center py-2 px-4 mb-2 rounded-md shadow-sm border border-indigo-700
+                                               transform transition-transform duration-300 ease-out hover:scale-105 stack-item`;
+                    stackItemDiv.textContent = item;
+                    // Add a delay for each item to make the animation more noticeable when pushing multiple items
+                    stackItemDiv.style.animationDelay = `${index * 0.05}s`;
+                    stackVisual.appendChild(stackItemDiv); // Changed from prepend to appendChild
+                });
+            }
+        }
+
+        // Function to display messages to the user
+        function showMessage(msg, type = 'warning') {
+            messageDisplay.textContent = msg;
+            messageDisplay.classList.remove('hidden', 'bg-yellow-100', 'border-yellow-400', 'text-yellow-700',
+                                            'bg-green-100', 'border-green-400', 'text-green-700',
+                                            'bg-red-100', 'border-red-400', 'text-red-700'); // Clear previous types
+
+            // Apply styles based on message type
+            if (type === 'warning') {
+                messageDisplay.classList.add('bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+            } else if (type === 'success') {
+                messageDisplay.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            } else if (type === 'error') {
+                 messageDisplay.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            }
+            messageDisplay.classList.remove('hidden'); // Ensure it's visible
+        }
+
+        // Function to hide messages
+        function hideMessage() {
+            messageDisplay.classList.add('hidden');
+            messageDisplay.textContent = '';
+        }
+
+        // Event listener for Push button
+        pushBtn.addEventListener('click', () => {
+            const value = inputValue.value.trim();
+            if (value !== '') {
+                stack.push(value); // Add value to the end of the array (logical top)
+                inputValue.value = ''; // Clear input
+                hideMessage(); // Hide any previous messages
+                updateStackVisual(); // Update the visual display
+            } else {
+                showMessage('Por favor, ingresa un valor para agregar a la pila.', 'warning');
+            }
+        });
+
+        // Event listener for Pop button
+        popBtn.addEventListener('click', () => {
+            if (stack.length > 0) {
+                const poppedValue = stack.pop(); // Remove the last element (logical top)
+                showMessage(`Se hizo pop a: ${poppedValue}`, 'success');
+                updateStackVisual(); // Update the visual display
+            } else {
+                showMessage('La pila está vacía. No se puede hacer pop.', 'error');
+            }
+        });
+
+        // Event listener for Cima (Peek) button
+        peekBtn.addEventListener('click', () => {
+            if (stack.length > 0) {
+                const topValue = stack[stack.length - 1]; // Get the last element without removing it (logical top)
+                showMessage(`Cima: ${topValue}`, 'success');
+            } else {
+                showMessage('La pila está vacía. No hay cima.', 'error');
+            }
+        });
+
+        // Initial rendering of the stack
+        updateStackVisual();
+    </script>
+</body>
+</html>
